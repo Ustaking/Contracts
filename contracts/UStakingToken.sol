@@ -1,40 +1,25 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract UStakingToken is ERC20, ERC20Burnable, Pausable, AccessControl {
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
+contract UStakingToken is ERC20, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    uint256 public MaxSupply = 2000000000e18;
+    uint256 public constant MAX_SUPPLY = 2000000000e18;
+
     constructor() ERC20("uStaking", "uSTK") {
+        _mint(msg.sender, 150000000 * 10 ** decimals());
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(PAUSER_ROLE, msg.sender);
-        _mint(msg.sender, 79000000 * 10 ** decimals());
         _grantRole(MINTER_ROLE, msg.sender);
     }
-
-    function pause() public onlyRole(PAUSER_ROLE) {
-        _pause();
-    }
-
-    function unpause() public onlyRole(PAUSER_ROLE) {
-        _unpause();
-    }
-
+    /// @notice function for the mint of new tokens
+    /// @dev mintin function new tokens to the address
+    /// @param to the address where the new tokens will be sent
+    /// @param amount the number of tokens that will be sent
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
-         require(MaxSupply >= totalSupply() + (amount), "max supply exceed");
+         require(MAX_SUPPLY >= totalSupply() + (amount), "max supply exceed");
         _mint(to, amount);
-    }
-
-    function _beforeTokenTransfer(address from, address to, uint256 amount)
-        internal
-        whenNotPaused
-        override
-    {
-        super._beforeTokenTransfer(from, to, amount);
     }
 }
