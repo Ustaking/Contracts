@@ -135,7 +135,10 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
  
 contract UStaking is Ownable{
-
+    using SafeBEP20 for IBEP20;
+    using Address for address payable;
+    using EnumerableSet for EnumerableSet.UintSet;
+    
     struct User{
         address user;
         uint stakeId;
@@ -163,10 +166,6 @@ contract UStaking is Ownable{
         bool withdrawStatus;
         bool cashBackStatus;
     }
-
-    using SafeBEP20 for IBEP20;
-    using Address for address payable;
-    using EnumerableSet for EnumerableSet.UintSet;
     
     IBEP20 immutable token;
     
