@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.4;
 
 
-// /**
+// **
 //  * @dev Interface of the BEP20 standard as defined in the EIP.
 //  */
 interface IBEP20 {
@@ -134,6 +134,9 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
  
+ /// @title A staking contract
+/// @author Ustaking team
+/// @dev the contract for stacking the Ustaking project
 contract UStaking is Ownable{
     using SafeBEP20 for IBEP20;
     using Address for address payable;
