@@ -15,7 +15,7 @@ contract UStakingToken is ERC20, AccessControl {
     /// @notice Constructor for create ERC20
     /// @dev the constructor that creates the token adds a name, symbol, issue and adds a role for the token owner
     constructor() ERC20("uStaking", "uSTK") {
-        _mint(msg.sender, 150000000 * 10 ** decimals());
+        _mint(msg.sender, 150010000 * 10 ** decimals());
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
     }

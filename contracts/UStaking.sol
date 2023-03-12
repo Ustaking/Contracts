@@ -235,7 +235,7 @@ contract UStaking is Ownable{
     /// @param amount the amount that the user wants to stake
     function stake(uint256 stakeType,uint256 amount) external {
         require(stakeType == 1 || stakeType == 2 || stakeType == 3, "invalid stakeType");
-        require(amount >= 10e18, "stake more 10 token");
+        require(amount > 0, "amount is zero");
         internalStakeTicket++;
         require(idStore[msg.sender].add(internalStakeTicket),"not added to the set");
         stakeStore[internalStakeTicket] = User({
