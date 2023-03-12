@@ -59,12 +59,12 @@ describe('Tests uStaking', function () {
 
   it('Should mint staking contract', async function () {
     await erc20Contract.mint(owner.address, 100000000000000000000000n);
-    expect(await erc20Contract.totalSupply()).to.eq(ethers.utils.parseEther('150100000'));
+    expect(await erc20Contract.totalSupply()).to.eq(ethers.utils.parseEther('150110000'));
   });
 
-  it('Should return the total 150000000 amount at the first mint', async function () {
+  it('Should return the total 150110000 amount at the first mint', async function () {
     const totalSupply = await erc20Contract.totalSupply();
-    expect(totalSupply).to.eq(ethers.utils.parseEther('150100000'));
+    expect(totalSupply).to.eq(ethers.utils.parseEther('150110000'));
   });
 
   it('Should return the STK character', async function () {
@@ -140,8 +140,8 @@ describe('Tests uStaking', function () {
     );
 
     await expect(
-      stakingContract.connect(user1).stake(2, ethers.utils.parseEther('2.2')),
-    ).to.be.revertedWith('stake more 10 token');
+      stakingContract.connect(user1).stake(2, ethers.utils.parseEther('0')),
+    ).to.be.revertedWith('amount is zero');
 
     await expect(() => stakingContract.connect(user1).stake(1, sumForStake)).to.changeTokenBalances(
       erc20Contract,
@@ -199,8 +199,8 @@ describe('Tests uStaking', function () {
     );
 
     expect(
-      stakingContract.connect(user3).stake(2, ethers.utils.parseEther('9')),
-    ).to.be.revertedWith('stake more 10 token');
+      stakingContract.connect(user3).stake(2, ethers.utils.parseEther('0')),
+    ).to.be.revertedWith('amount is zero');
 
     await expect(() => stakingContract.connect(user3).stake(2, sumForStake)).to.changeTokenBalances(
       erc20Contract,
@@ -228,8 +228,8 @@ describe('Tests uStaking', function () {
     );
 
     expect(
-      stakingContract.connect(user4).stake(1, ethers.utils.parseEther('5')),
-    ).to.be.revertedWith('stake more 10 token');
+      stakingContract.connect(user4).stake(1, ethers.utils.parseEther('0')),
+    ).to.be.revertedWith('amount is zero');
 
     await expect(() => stakingContract.connect(user4).stake(3, sumForStake)).to.changeTokenBalances(
       erc20Contract,
@@ -423,9 +423,9 @@ describe('Tests uStaking', function () {
   it('Should mint staking contract', async function () {
     const mintRole = await erc20Contract.MINTER_ROLE();
 
-    expect(await erc20Contract.totalSupply()).to.eq(ethers.utils.parseEther('150111985'));
+    expect(await erc20Contract.totalSupply()).to.eq(ethers.utils.parseEther('150121985'));
     await expect(erc20Contract.connect(user1).mint(user1.address, 100000)).to.be.reverted;
-    await erc20Contract.mint(owner.address, ethers.utils.parseEther('1849888015'));
+    await erc20Contract.mint(owner.address, ethers.utils.parseEther('1849878015'));
 
     await expect(erc20Contract.mint(owner.address, 1)).to.be.revertedWith('max supply exceed');
   });
