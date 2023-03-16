@@ -170,25 +170,24 @@ contract UStaking is Ownable{
         bool cashBackStatus;
     }
     
-    IBEP20 immutable token;
+    IBEP20 public immutable token;
     
     uint256 public internalStakeTicket;
     uint256 public totalRewardEmission;
-    uint256 public constant cashBackReward = 2;
-    uint256 public constant refWalletReward = 25;
+    uint256 public constant CASH_BACK_REWARD = 2;
+    uint256 public constant REF_WALLET_REWARD = 25;
     
     address public refWallet;
-    
-     
     
     mapping (uint256 => User) public stakeStore;
     mapping (address => EnumerableSet.UintSet) private idStore;
     mapping (uint256 => uint256) public stakeDuration;
     mapping (uint256 => uint256) public stakeReward;
     
-    event StakeEvent(address indexed from,uint256 amount,uint256 stakeTime);
-    event WithdrawEvent(address indexed from,uint256 amount,uint256 unStakeTime);
-    event ClaimEvent(address indexed from,uint256 reward,uint256 unStakeTime);
+    event StakeEvent(address indexed from, uint256 amount, uint256 stakeTime);
+    event WithdrawEvent(address indexed from, uint256 amount, uint256 unStakeTime);
+    event CashBackEvent(address indexed from, uint256 amount);
+    event ClaimEvent(address indexed from, uint256 reward, uint256 unStakeTime);
 
     /// @notice a constructor that accepts the RC20 token address and the wallet address for the referral program
     /// @dev the constructor that accepts the RC20 token address and the wallet address
@@ -250,8 +249,8 @@ contract UStaking is Ownable{
             withdrawStatus: false,
             cashBackStatus: false
         });
-        uint256 mintAmount = amount * (stakeReward[stakeType]) / (100) + (amount * (cashBackReward) / (100));
-        token.mint(refWallet, amount * (refWalletReward) / (100));
+        uint256 mintAmount = amount * (stakeReward[stakeType]) / (100) + (amount * (CASH_BACK_REWARD) / (100));
+        token.mint(refWallet, amount * (REF_WALLET_REWARD) / (100));
         token.mint(address(this),mintAmount);
         token.safeTransferFrom(msg.sender,address(this),amount);
         emit StakeEvent(msg.sender,amount,block.timestamp);
@@ -296,9 +295,10 @@ contract UStaking is Ownable{
     function cashBack(uint256 stakeId) external isContains(stakeId){
         User storage store = stakeStore[stakeId];
         require(!store.cashBackStatus, "cashback already claimed");
-        
+        uint256 amount = store.stakeAmount * (CASH_BACK_REWARD) / (100);
         store.cashBackStatus = true;
-        token.safeTransfer(store.user,store.stakeAmount * (cashBackReward) / (100));
+        token.safeTransfer(store.user, amount);
+        emit CashBackEvent(store.user, amount);
     }
 
      /// @notice the function returns an array of user id
