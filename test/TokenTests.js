@@ -1,6 +1,5 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const BigNumber = require('bignumber.js');
 
 describe('Tests uStaking', function () {
   let owner;
@@ -124,7 +123,7 @@ describe('Tests uStaking', function () {
     expect(balanceOfUser4).to.eq(sumForTransfer);
   });
 
-  it('Should approve and stake from user1 for staking contract from user1', async function () {
+  it('Should approve and stake from user1 for staking', async function () {
     const sumForStake = ethers.utils.parseEther('1000');
     const sumStake = ethers.utils.parseEther('1320'); // + 32%, refferal 25%, staking 5% , cashback 2%
     const sumMinusForStake = ethers.utils.parseEther('-1000');
@@ -286,7 +285,7 @@ describe('Tests uStaking', function () {
     );
   });
 
-  it('Should return the percentage for the stake time', async function () {
+  it('Should return the percentage for the stake time for user1', async function () {
     await expect(() => stakingContract.connect(user1).claim(1)).to.changeTokenBalances(
       erc20Contract,
       [user1, stakingContract],
@@ -412,12 +411,58 @@ describe('Tests uStaking', function () {
     expect(await stakingContract.connect(user1).pendingRewards(12)).to.equal(0);
   });
 
-  it('Should check getUserData for user2', async function () {
+  it('Should check getUserData and Total Id for user2', async function () {
+    const index = 0;
     const user2Info = await stakingContract.getUserData(user2.address);
-    expect(user2Info[0].stakedAmount).to.equal(ethers.utils.parseEther('1000'));
-    expect(user2Info[0].stakeType).to.equal(1);
-    expect(user2Info[0].cashBackStatus).to.equal(true);
-    expect(user2Info[0].withdrawStatus).to.equal(true);
+    expect(user2Info[index].stakedAmount).to.equal(ethers.utils.parseEther('1000'));
+    expect(user2Info[index].stakeType).to.equal(1);
+    expect(user2Info[index].cashBackStatus).to.equal(true);
+    expect(user2Info[index].withdrawStatus).to.equal(true);
+
+    const totalId = await stakingContract.stakeTotalIds(user2.address);
+
+    expect(totalId.length).to.equal(1);
+  });
+
+  it('Should check getUserData and Total Ids for user3', async function () {
+    const index = 0;
+    const user3Info = await stakingContract.getUserData(user3.address);
+    expect(user3Info[index].stakedAmount).to.equal(ethers.utils.parseEther('3000'));
+    expect(user3Info[index].stakeType).to.equal(2);
+    expect(user3Info[index].cashBackStatus).to.equal(true);
+    expect(user3Info[index].withdrawStatus).to.equal(true);
+    const totalId = await stakingContract.stakeTotalIds(user3.address);
+
+    expect(totalId.length).to.equal(1);
+  });
+
+  it('Should check getUserData and Total Id for user4', async function () {
+    const index = 0;
+    const user1Info = await stakingContract.getUserData(user4.address);
+    expect(user1Info[index].stakedAmount).to.equal(ethers.utils.parseEther('2500'));
+    expect(user1Info[index].stakeType).to.equal(3);
+    expect(user1Info[index].cashBackStatus).to.equal(false);
+    expect(user1Info[index].withdrawStatus).to.equal(false);
+    const totalId = await stakingContract.stakeTotalIds(user4.address);
+
+    expect(totalId.length).to.equal(1);
+  });
+
+  it('Should return cashBack user4 in 2% ', async function () {
+    const sumForStake = ethers.utils.parseEther('50');
+    const sumMinusForStake = ethers.utils.parseEther('-50');
+
+    await expect(stakingContract.connect(user4).cashBack(1)).to.be.revertedWith('invalid stake id');
+
+    await expect(() => stakingContract.connect(user4).cashBack(4)).to.changeTokenBalances(
+      erc20Contract,
+      [user4, stakingContract],
+      [sumForStake, sumMinusForStake],
+    );
+
+    await expect(stakingContract.connect(user4).cashBack(4)).to.be.revertedWith(
+      'cashback already claimed',
+    );
   });
 
   it('Should mint staking contract', async function () {
@@ -427,17 +472,25 @@ describe('Tests uStaking', function () {
     await expect(erc20Contract.connect(user1).mint(user1.address, 100000)).to.be.reverted;
     await erc20Contract.mint(owner.address, ethers.utils.parseEther('1849878015'));
 
-    await expect(erc20Contract.mint(owner.address, 1)).to.be.revertedWith('max supply exceed');
+    await expect(erc20Contract.mint(owner.address, 10)).to.be.revertedWith('max supply exceed');
+
+    await expect(erc20Contract.connect(user1).mint(owner.address, 10)).to.be.revertedWith(
+      'AccessControl: account 0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc is missing role 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6',
+    );
   });
 
-  it('Should withdraw stake amount user4', async function () {
+  it('Should claim and withdraw stake amount user4', async function () {
     const sumForStake = ethers.utils.parseEther('2500');
     const sumMinusForStake = ethers.utils.parseEther('-2500');
 
     await ethers.provider.send('evm_increaseTime', [186624000]);
     await ethers.provider.send('evm_mine');
 
-    expect(stakingContract.connect(user4).withdraw(12)).to.be.revertedWith('invalid stake id');
+    await expect(stakingContract.connect(user4).claim(12)).to.be.revertedWith('invalid stake id');
+
+    await expect(stakingContract.connect(user4).withdraw(12)).to.be.revertedWith(
+      'invalid stake id',
+    );
 
     await expect(await stakingContract.connect(user4).withdraw(4)).to.changeTokenBalances(
       erc20Contract,
@@ -446,5 +499,16 @@ describe('Tests uStaking', function () {
     );
 
     await expect(stakingContract.connect(user4).withdraw(4)).to.be.revertedWith('already claimed');
+  });
+  it('Should check getUserData for user4 after withdraw and cashBack', async function () {
+    const index = 0;
+    const user1Info = await stakingContract.getUserData(user4.address);
+    expect(user1Info[index].stakedAmount).to.equal(ethers.utils.parseEther('2500'));
+    expect(user1Info[index].stakeType).to.equal(3);
+    expect(user1Info[index].cashBackStatus).to.equal(true);
+    expect(user1Info[index].withdrawStatus).to.equal(true);
+    const totalId = await stakingContract.stakeTotalIds(user4.address);
+
+    expect(totalId.length).to.equal(1);
   });
 });
